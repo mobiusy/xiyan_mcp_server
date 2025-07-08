@@ -10,7 +10,8 @@
 <p align="center">
 💻 <a href="https://github.com/XGenerationLab/xiyan_mcp_server" >XiYan-mcp-server</a> | 
 🌐 <a href="https://github.com/XGenerationLab/XiYan-SQL" >XiYan-SQL</a> |
-📖 <a href="https://arxiv.org/abs/2411.08599"> Arxiv</a> | 
+📖 <a href="https://arxiv.org/abs/2507.04701"> Arxiv</a> | 
+🏆 <a href="https://github.com/XGenerationLab/XiYanSQL-QwenCoder" >XiYanSQL Model</a> |
 📄 <a href="https://paperswithcode.com/paper/xiyan-sql-a-multi-generator-ensemble" >PapersWithCode</a>
 🤗 <a href="https://huggingface.co/collections/XGenerationLab/xiyansql-models-67c9844307b49f87436808fc">HuggingFace</a> |
 🤖 <a href="https://modelscope.cn/collections/XiYanSQL-Models-4483337b614241" >ModelScope</a> |
