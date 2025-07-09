@@ -1,6 +1,8 @@
 import argparse
 import logging
 import os
+import signal
+import sys
 
 import yaml  # 添加yaml库导入
 from mcp.server import FastMCP
@@ -20,6 +22,15 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("xiyan_mcp_server")
+
+
+# Handle SIGINT (Ctrl+C) gracefully
+def signal_handler(sig, frame):
+    print("Shutting down server gracefully...")
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def get_yml_config():
@@ -113,6 +124,7 @@ def sql_gen_and_execute(db_env: DataBaseEnv, query: str):
         "messages": messages,
         "key": model_config["key"],
         "url": model_config["url"],
+        "api_version": model_config.get("api_version"),
     }
 
     try:
@@ -229,6 +241,7 @@ def main():
     if args.transport == "streamable-http":
         mcp.settings.port = args.port
         mcp.settings.host = args.host
+        logger.info(f"MCP server running at {args.host}/{args.port}")
         mcp.run(transport="streamable-http")
     else:
         mcp.run(transport=args.transport)
