@@ -15,7 +15,7 @@ def call_openai_sdk(**args):
             azure_endpoint=base_url,
             azure_deployment=args.get("model", "gpt-35-turbo"),
         )
-        logging.error("Configured Azure Chat Open AI")
+        logging.info("Configured AzureOpenAI")
     else:
         client = OpenAI(
             api_key=key,
