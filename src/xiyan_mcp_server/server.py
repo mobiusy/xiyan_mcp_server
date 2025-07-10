@@ -7,7 +7,6 @@ import sys
 import yaml  # 添加yaml库导入
 from mcp.server import FastMCP
 from mcp.types import TextContent
-from mysql.connector import Error, connect
 
 from .database_env import DataBaseEnv
 from .utils.db_config import DBConfig
@@ -52,14 +51,21 @@ def get_yml_config():
 
 def get_xiyan_config(db_config):
     dialect = db_config.get("dialect", "mysql")
-    xiyan_db_config = DBConfig(
-        dialect=dialect,
-        db_name=db_config["database"],
-        user_name=db_config["user"],
-        db_pwd=db_config["password"],
-        db_host=db_config["host"],
-        port=db_config["port"],
-    )
+
+    if dialect.lower() == "sqlite":
+        xiyan_db_config = DBConfig(
+            dialect=dialect,
+            db_path=db_config.get("db_path"),
+        )
+    else:
+        xiyan_db_config = DBConfig(
+            dialect=dialect,
+            db_name=db_config["database"],
+            user_name=db_config["user"],
+            db_pwd=db_config["password"],
+            db_host=db_config["host"],
+            port=db_config["port"],
+        )
     return xiyan_db_config
 
 
@@ -74,7 +80,15 @@ dialect = global_db_config.get("dialect", "mysql")
 mcp = FastMCP("xiyan", **mcp_config)
 
 
-@mcp.resource(dialect + "://" + global_db_config.get("database", ""))
+@mcp.resource(
+    dialect
+    + "://"
+    + (
+        global_db_config.get("db_path", "")
+        if dialect.lower() == "sqlite"
+        else "/" + global_db_config.get("database", "")
+    )
+)
 async def read_resource() -> str:
     db_engine = init_db_conn(global_xiyan_db_config)
     db_source = HITLSQLDatabase(db_engine)
@@ -84,17 +98,15 @@ async def read_resource() -> str:
 @mcp.resource(dialect + "://{table_name}")
 async def read_resource(table_name) -> str:
     """Read table contents."""
-    config = global_db_config
     try:
-        with connect(**config) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(f"SELECT * FROM {table_name} LIMIT 100")
-                columns = [desc[0] for desc in cursor.description]
-                rows = cursor.fetchall()
-                result = [",".join(map(str, row)) for row in rows]
-                return "\n".join([",".join(columns)] + result)
-
-    except Error as e:
+        db_engine = init_db_conn(global_xiyan_db_config)
+        db_source = HITLSQLDatabase(db_engine)
+        records, columns = db_source.fetch_with_column_name(
+            f"SELECT * FROM {table_name}"
+        )
+        result = [",".join(map(str, row)) for row in records]
+        return "\n".join([",".join(columns)] + result)
+    except Exception as e:
         raise RuntimeError(f"Database error: {str(e)}")
 
 
