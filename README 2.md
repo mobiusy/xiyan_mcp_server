@@ -349,16 +349,10 @@ Add an env: key is YML and value is the path to your yml file.
 Ref <a href="https://github.com/XGenerationLab/xiyan_mcp_server/blob/main/imgs/witsy.jpg">Witsy config example</a>
 
 
-## Contact us:
-If you are interested in our research or products, please feel free to contact us.
-
-#### Contact Information:
-
-Yifu Liu, zhencang.lyf@alibaba-inc.com
-
-#### Join Our DingTalk Group
-
-<a href="https://github.com/XGenerationLab/XiYan-SQL/blob/main/xiyansql_dingding.png">Ding Group钉钉群</a> 
+## It Does Not Work!
+Contact us:
+<a href="https://github.com/XGenerationLab/xiyan_mcp_server/blob/main/imgs/dinggroup_out.png">Ding Group钉钉群</a>｜ 
+<a href="https://weibo.com/u/2540915670" target="_blank">Follow me on Weibo</a>
 
 
 ## Other Related Links
