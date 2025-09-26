@@ -11,11 +11,12 @@
 <p align="center">
 💻 <a href="https://github.com/XGenerationLab/xiyan_mcp_server" >XiYan-mcp-server</a> | 
 🌐 <a href="https://github.com/XGenerationLab/XiYan-SQL" >XiYan-SQL</a> |
-📖 <a href="https://arxiv.org/abs/2411.08599"> Arxiv</a> | 
+📖 <a href="https://arxiv.org/abs/2507.04701"> Arxiv</a> | 
+🏆 <a href="https://github.com/XGenerationLab/XiYanSQL-QwenCoder" >XiYanSQL Model</a> |
 📄 <a href="https://paperswithcode.com/paper/xiyan-sql-a-multi-generator-ensemble" >PapersWithCode</a>
-💻 <a href="https://huggingface.co/collections/XGenerationLab/xiyansql-models-67c9844307b49f87436808fc">HuggingFace</a> |
+🤗 <a href="https://huggingface.co/collections/XGenerationLab/xiyansql-models-67c9844307b49f87436808fc">HuggingFace</a> |
 🤖 <a href="https://modelscope.cn/collections/XiYanSQL-Models-4483337b614241" >ModelScope</a> |
-🌕 <a href="https://bailian.console.aliyun.com/xiyan">析言GBI</a> 
+🌕 <a href="https://bailian.console.aliyun.com/xiyan">析言GBI</a>
 <br />
 <img src="https://badge.mcpx.dev/?type=server%20%27MCP%20Server%27" alt="MCP Server" />
 <a href="https://arxiv.org/abs/2411.08599"><img src="imgs/Paper-Arxiv-orange.svg" ></a>
@@ -318,15 +319,40 @@ env YML=path/to/yml /xxx/python -m xiyan_mcp_server
 添加一个环境变量：键为 YML，值为您 yml 文件的路径。
 参考 <a href="https://github.com/XGenerationLab/xiyan_mcp_server/blob/main/imgs/witsy.jpg">Witsy 配置示例</a>
 
-## 它不起作用！
-请联系我们：
-<a href="https://github.com/XGenerationLab/xiyan_mcp_server/blob/main/imgs/dinggroup_out.png">钉钉群</a>｜ 
-<a href="https://weibo.com/u/2540915670" target="_blank">关注我</a>
+## 联系我们
+
+如果您对我们的研究或产品感兴趣，请随时联系我们。
+
+#### 联系信息:
+
+刘义富, zhencang.lyf@alibaba-inc.com
+
+#### 加入我们的钉钉群
+
+<a href="https://github.com/XGenerationLab/XiYan-SQL/blob/main/xiyansql_dingding.png">Ding Group钉钉群</a> 
+
+
+## 其他相关链接
+
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/xgenerationlab-xiyan-mcp-server-badge.png)](https://mseep.ai/app/xgenerationlab-xiyan-mcp-server)
+
 
 ## 引用
-如果您觉得我们的工作有帮助，可以随意引用。
-```bib
-@article{xiyansql,
+如果您觉得我们的工作对您有帮助，欢迎给我们一个引用。
+
+```bibtex
+@article{XiYanSQL,
+      title={XiYan-SQL: A Novel Multi-Generator Framework For Text-to-SQL}, 
+      author={Yifu Liu and Yin Zhu and Yingqi Gao and Zhiling Luo and Xiaoxia Li and Xiaorong Shi and Yuntao Hong and Jinyang Gao and Yu Li and Bolin Ding and Jingren Zhou},
+      year={2025},
+      eprint={2507.04701},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2507.04701}, 
+}
+```
+```bibtex
+@article{xiyansql_pre,
       title={A Preview of XiYan-SQL: A Multi-Generator Ensemble Framework for Text-to-SQL}, 
       author={Yingqi Gao and Yifu Liu and Xiaoxia Li and Xiaorong Shi and Yin Zhu and Yiming Wang and Shiqi Li and Wei Li and Yuntao Hong and Zhiling Luo and Jinyang Gao and Liyu Mou and Yu Li},
       year={2024},
@@ -334,4 +360,3 @@ env YML=path/to/yml /xxx/python -m xiyan_mcp_server
       url={https://arxiv.org/abs/2411.08599},
       primaryClass={cs.AI}
 }
-```
