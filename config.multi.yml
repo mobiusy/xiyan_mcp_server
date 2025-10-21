@@ -1,0 +1,29 @@
+mcp:
+  host: 0.0.0.0
+  port: 8000
+
+model:
+  name: "qwen3-coder-30b"
+  key: ""
+  url: "http://10.66.12.247:30001/v1"
+
+# 默认项目ID；不设置时将回落到第一个项目或"default"
+default_project_id: "djy"
+
+# 多项目数据库配置示例
+databases:
+  djy:  # PostgreSQL 项目
+    dialect: "postgresql"
+    host: "10.66.12.247"
+    port: 5432
+    user: "dev"
+    password: "51World@123"
+    database: "djy"
+
+  yizi:  # MySQL 项目
+    dialect: "postgresql"
+    host: "10.66.12.247"
+    port: 5432
+    user: "dev"
+    password: "51World@123"
+    database: "djy"

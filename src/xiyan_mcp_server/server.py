@@ -3,6 +3,7 @@ import logging
 import os
 import signal
 import sys
+from typing import Dict, Any
 
 import yaml  # 添加yaml库导入
 from mcp.server import FastMCP
@@ -68,13 +69,76 @@ def get_xiyan_config(db_config):
         )
     return xiyan_db_config
 
+def build_db_registry(config: dict) -> Dict[str, DBConfig]:
+    """Build a registry of project_id -> DBConfig.
+    Supports both single 'database' and multi 'databases' in YAML for backward compatibility.
+    """
+    registry: Dict[str, DBConfig] = {}
+
+    # Multi-project config
+    databases_map = config.get("databases")
+    if isinstance(databases_map, dict) and databases_map:
+        for pid, db_conf in databases_map.items():
+            try:
+                registry[pid] = get_xiyan_config(db_conf)
+            except Exception as e:
+                logger.error(f"Invalid database config for project '{pid}': {e}")
+
+    # Backward compatibility: single database
+    single_db_conf = config.get("database")
+    if single_db_conf:
+        try:
+            # Use 'default' as the project_id for single-db config
+            registry.setdefault("default", get_xiyan_config(single_db_conf))
+        except Exception as e:
+            logger.error(f"Invalid single database config: {e}")
+
+    if not registry:
+        raise ValueError("No database configuration found. Please provide 'database' or 'databases' in YAML.")
+
+    return registry
+
 
 global_config = get_yml_config()
 mcp_config = global_config.get("mcp", {})
 model_config = global_config["model"]
-global_db_config = global_config.get("database")
-global_xiyan_db_config = get_xiyan_config(global_db_config)
-dialect = global_db_config.get("dialect", "mysql")
+
+# Build registry and default project
+DB_REGISTRY: Dict[str, DBConfig] = build_db_registry(global_config)
+DEFAULT_PROJECT_ID: str = (
+    global_config.get("default_project_id")
+    or ("default" if "default" in DB_REGISTRY else next(iter(DB_REGISTRY.keys())))
+)
+
+# Default DB config and dialect
+default_db_config_obj: DBConfig = DB_REGISTRY[DEFAULT_PROJECT_ID]
+dialect = default_db_config_obj.dialect
+
+# Simple caches to avoid re-building engines and schema per request
+ENGINE_CACHE: Dict[str, Any] = {}
+DB_SOURCE_CACHE: Dict[str, HITLSQLDatabase] = {}
+
+
+def get_engine(project_id: str):
+    """Get or create cached SQLAlchemy Engine for a project."""
+    pid = project_id if project_id in DB_REGISTRY else DEFAULT_PROJECT_ID
+    if pid in ENGINE_CACHE:
+        return ENGINE_CACHE[pid]
+    engine = init_db_conn(DB_REGISTRY[pid])
+    ENGINE_CACHE[pid] = engine
+    return engine
+
+
+def get_db_source(project_id: str) -> HITLSQLDatabase:
+    """Get or create cached HITLSQLDatabase (with built MSchema) for a project."""
+    pid = project_id if project_id in DB_REGISTRY else DEFAULT_PROJECT_ID
+    if pid in DB_SOURCE_CACHE:
+        return DB_SOURCE_CACHE[pid]
+    engine = get_engine(pid)
+    db_name_opt = DB_REGISTRY[pid].db_name
+    db_source = HITLSQLDatabase(engine, db_name=db_name_opt)
+    DB_SOURCE_CACHE[pid] = db_source
+    return db_source
 
 
 mcp = FastMCP("xiyan", **mcp_config)
@@ -84,23 +148,44 @@ mcp = FastMCP("xiyan", **mcp_config)
     dialect
     + "://"
     + (
-        global_db_config.get("db_path", "")
+        (default_db_config_obj.db_path or "")
         if dialect.lower() == "sqlite"
-        else "/" + global_db_config.get("database", "")
+        else "/" + (default_db_config_obj.db_name or "")
     )
 )
 async def read_resource() -> str:
-    db_engine = init_db_conn(global_xiyan_db_config)
-    db_source = HITLSQLDatabase(db_engine)
+    """List default project's schema as a resource (backward compatible)."""
+    db_source = get_db_source(DEFAULT_PROJECT_ID)
     return db_source.mschema.to_mschema()
 
 
 @mcp.resource(dialect + "://{table_name}")
 async def read_resource(table_name) -> str:
-    """Read table contents."""
+    """Read default project's table contents (backward compatible)."""
     try:
-        db_engine = init_db_conn(global_xiyan_db_config)
-        db_source = HITLSQLDatabase(db_engine)
+        db_source = get_db_source(DEFAULT_PROJECT_ID)
+        records, columns = db_source.fetch_with_column_name(
+            f"SELECT * FROM {table_name}"
+        )
+        result = [",".join(map(str, row)) for row in records]
+        return "\n".join([",".join(columns)] + result)
+    except Exception as e:
+        raise RuntimeError(f"Database error: {str(e)}")
+
+
+# New resources: project-aware schema and table sampling
+@mcp.resource("db://{project_id}")
+async def read_project_schema(project_id) -> str:
+    """List schema of the specified project."""
+    db_source = get_db_source(str(project_id))
+    return db_source.mschema.to_mschema()
+
+
+@mcp.resource("db://{project_id}/{table_name}")
+async def read_project_table(project_id, table_name) -> str:
+    """Read table contents from the specified project."""
+    try:
+        db_source = get_db_source(str(project_id))
         records, columns = db_source.fetch_with_column_name(
             f"SELECT * FROM {table_name}"
         )
@@ -200,17 +285,16 @@ def sql_fix(
     return sql_query
 
 
-def call_xiyan(query: str) -> str:
+def call_xiyan(query: str, project_id: str | None = None) -> str:
     """Fetch the data from database through a natural language query
 
     Args:
         query: The query in natual language
     """
-
-    logger.info(f"Calling tool with arguments: {query}")
+    pid = project_id if (project_id and project_id in DB_REGISTRY) else DEFAULT_PROJECT_ID
+    logger.info(f"Calling tool with arguments: {query}, project_id: {pid}")
     try:
-        db_engine = init_db_conn(global_xiyan_db_config)
-        db_source = HITLSQLDatabase(db_engine)
+        db_source = get_db_source(pid)
     except Exception as e:
         return "数据库连接失败" + str(e)
     logger.info("Calling xiyan")
@@ -227,8 +311,19 @@ def get_data(query: str) -> list[TextContent]:
     Args:
         query: The query in natural language
     """
-
     res = call_xiyan(query)
+    return [TextContent(type="text", text=res)]
+
+
+@mcp.tool()
+def get_data_by_project(query: str, project_id: str) -> list[TextContent]:
+    """Fetch the data from a specified project's database through a natural language query.
+
+    Args:
+        query: The query in natural language
+        project_id: The target project_id as configured in YAML
+    """
+    res = call_xiyan(query, project_id)
     return [TextContent(type="text", text=res)]
 
 
@@ -256,8 +351,11 @@ def main():
         logger.info(f"MCP server running at {args.host}/{args.port}")
         mcp.run(transport="streamable-http")
     else:
+        logger.info(f"MCP server running by {args.transport}")
+        print(f"MCP server running by {args.transport}")
         mcp.run(transport=args.transport)
 
 
 if __name__ == "__main__":
+    print(f"MCP server start")
     main()

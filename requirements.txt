@@ -2,6 +2,6 @@ mcp
 mysql-connector-python>=9.1.0
 sqlalchemy
 llama_index
-yaml
+PyYAML
 pandas
 pymysql

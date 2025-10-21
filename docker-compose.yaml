@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  xiyan-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: xiyan-mcp-server
+    environment:
+      # - YML=/app/config_djy.yml
+      - YML=/app/config.multi.yml
+    volumes:
+      # - ./config_djy.yml:/app/config_djy.yml
+      - ./config.multi.yml:/app/config.multi.yml
+    ports:
+      - "18000:8000"
+    restart: unless-stopped
+    networks:
+      - xiyan-network
+
+networks:
+  xiyan-network:
+    driver: bridge
